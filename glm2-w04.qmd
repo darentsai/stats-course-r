@@ -253,7 +253,7 @@ t.test(birthweight ~ smoking, data = smk_wt, var.equal = TRUE)
 ### 事後檢定 (post-hoc test)
 
 若有 3 組獨立樣本，需進⾏ $C_2^3 = 3$ 次成對比較。
-令容許一次成對比較犯錯的機率為$\alpha^*$，容許整體犯錯的機率為$\alpha$，則
+令一次成對比較犯錯的可容許機率為$\alpha^*$，整體犯錯的可容許機率為$\alpha$，則
 
 $$
 \begin{aligned}
@@ -264,8 +264,8 @@ $$
 \end{aligned}
 $$
 
-為了避免型 I 誤差膨脹，可將容許一次成對比較犯錯的機率設為 $\frac{\alpha}{3}$
-(等同於將進行一次成對比較的 *p*-value 乘以3)，
+為了避免型 I 誤差膨脹，可將一次成對比較犯錯的機率 $\alpha^*$ 設為 $\frac{\alpha}{3}$
+(等同於將每一次成對比較的 *p*-value 乘以3)，
 此做法即為 Bonferroni correction。
 
 ### Exercise (4) {.unnumbered}

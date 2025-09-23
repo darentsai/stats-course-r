@@ -2731,7 +2731,7 @@ mean in group nonsmokers    mean in group smokers
 <span class="header-section-number">2</span> Analysis of Variance (ANOVA)</h1>
 <section id="事後檢定-post-hoc-test" class="level2" data-number="2.1"><h2 data-number="2.1" class="anchored" data-anchor-id="事後檢定-post-hoc-test">
 <span class="header-section-number">2.1</span> 事後檢定 (post-hoc test)</h2>
-<p>若有 3 組獨立樣本，需進⾏ <span class="math inline">\(C_2^3 = 3\)</span> 次成對比較。 令容許一次成對比較犯錯的機率為<span class="math inline">\(\alpha^*\)</span>，容許整體犯錯的機率為<span class="math inline">\(\alpha\)</span>，則</p>
+<p>若有 3 組獨立樣本，需進⾏ <span class="math inline">\(C_2^3 = 3\)</span> 次成對比較。 令一次成對比較犯錯的可容許機率為<span class="math inline">\(\alpha^*\)</span>，整體犯錯的可容許機率為<span class="math inline">\(\alpha\)</span>，則</p>
 <p><span class="math display">\[
 \begin{aligned}
   \alpha &amp;= P(\text{3次成對比較至少犯一錯}) \\
@@ -2740,7 +2740,7 @@ mean in group nonsmokers    mean in group smokers
          &amp;= 3\alpha^* - 3\alpha^{*2} + \alpha^{*3} \approx 3\alpha^*
 \end{aligned}
 \]</span></p>
-<p>為了避免型 I 誤差膨脹，可將容許一次成對比較犯錯的機率設為 <span class="math inline">\(\frac{\alpha}{3}\)</span> (等同於將進行一次成對比較的 <em>p</em>-value 乘以3)， 此做法即為 Bonferroni correction。</p>
+<p>為了避免型 I 誤差膨脹，可將一次成對比較犯錯的機率 <span class="math inline">\(\alpha^*\)</span> 設為 <span class="math inline">\(\frac{\alpha}{3}\)</span> (等同於將每一次成對比較的 <em>p</em>-value 乘以3)， 此做法即為 Bonferroni correction。</p>
 </section><section id="exercise-4" class="level2 unnumbered"><h2 class="unnumbered anchored" data-anchor-id="exercise-4">Exercise (4)</h2>
 <p>欲探討三種類型的鐮刀型紅血球疾病(sickle cell disease) 患者的血紅素濃度是否有差異，研究者收集 41 位患者 並記錄他們的疾病類型 (Hb SC, Hb S/b, Hb SS) 與血紅素濃度。</p>
 <div class="cell">
