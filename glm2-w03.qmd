@@ -1,9 +1,12 @@
 ---
-title: "廣義線性模型 (2025 Fall)"
+title: "廣義線性模型 (HDAS7009-02)"
 subtitle: 平均值的抽樣分布 (Sampling distributions of the Mean)
 author: "Tsai, Dai-Rong"
 number-sections: true
 toc: true
+shift-heading-level-by: -1
+toc-expand: 3
+toc-depth: 3
 format:
   html:
     embed-resources: true
@@ -11,9 +14,9 @@ format:
     grid:
       margin-width: 350px
   pdf:
-    shift-heading-level-by: -1
-    toc-depth: 2
-    CJKmainfont: "DFYuan-Lt-HK-BF"
+    CJKmainfont: "Kaiti TC"
+    CJKoptions:
+      - BoldFont=Kaiti TC Bold
     geometry:
       - right=30mm
 ---
@@ -254,7 +257,7 @@ for(n in c(5, 10, 30)) {
 }
 ```
 
-## Exercise (1)
+### Exercise (1) {.unnumbered}
 
 若大學畢業生的平均月薪資是 \$25,000，標準差是 \$5,000。
 
@@ -324,7 +327,7 @@ pnorm(2) - pnorm(-2)
 pt(2, df = 49-1) - pt(-2, df = 49-1)
 ```
 
-## Exercise (2)
+### Exercise (2) {.unnumbered}
 
 1991 至 1995 年英國 Bristol 的兩位心臟外科醫師，
 共對 181 位 5 歲以下患有先天性心臟病的小孩作矯正手術，
@@ -360,13 +363,13 @@ sum(dbinom(43:181, 181, 0.12))
     \bar{X} + t_{\alpha/2} \cdot \frac{s}{\sqrt{n}}
     $$
 
-## Exercise (3)
+### Exercise (3) {.unnumbered}
 
 為了想知道台灣高中男生的平均身高，我們蒐集了 12 位某市立高中男生的身高體重。
 請計算台灣高中男生的平均身高的 95% 信賴區間。
 
 ```{r}
-dat <- readxl::read_excel("basketball_team.xls", sheet = "sheet 1")
+dat <- readxl::read_excel("data/basketball_team.xls", sheet = "sheet 1")
 ```
 
 ::: {.panel-tabset}
