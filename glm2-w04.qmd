@@ -91,6 +91,9 @@ t.test(pres$ppm, alternative = "greater", mu = 3)
    
 ```{r indent = "   "}
 t.test(pres$ppm, alternative = "two.sided", mu = 3)
+
+# How to get p-value?
+(1 - pt(2.862, df = 9)) * 2
 ```
    
    **結論**: 此廠牌泡麵防腐劑含量之樣本平均值為 3.9 ppm，在顯著水準 0.05 下
