@@ -67,6 +67,9 @@ str(pres)
    
 ```{r indent = "   "}
 t.test(pres$ppm, alternative = "greater", mu = 3)
+
+# How to get p-value?
+1 - pt(2.862, df = 9)
 ```
    
    **結論**: 此廠牌泡麵防腐劑含量之樣本平均值為 3.9 ppm，在顯著水準 0.05 下
@@ -204,8 +207,8 @@ str(smk_wt)
 #| fig-width: 5
 
 table(smk_wt$smoking)
-aggregate(birthweight ~ smoking, data = smk_wt, FUN = mean)
-aggregate(birthweight ~ smoking, data = smk_wt, FUN = sd)
+aggregate(birthweight ~ smoking, data = smk_wt,
+          FUN = \(x) c(Mean = mean(x), SD = sd(x)))
 boxplot(birthweight ~ smoking, data = smk_wt, boxwex = 0.5)
 points(aggregate(birthweight ~ smoking, data = smk_wt, FUN = mean), col = "red")
 ```
@@ -249,6 +252,16 @@ t.test(birthweight ~ smoking, data = smk_wt, var.equal = TRUE)
 吸菸與無吸菸孕婦生下的嬰兒平均體重有顯著差異。
 
 ## Analysis of Variance (ANOVA)
+
+### Prerequisites
+
+- Independence of observations
+- Normality
+   - Check with **Shapiro-Wilk test**: `shapiro.test()`
+   - If not hold, use non-parametric **Kruskal-Wallis test**: `kruskal.test()`
+- Equality of variances
+   - Check with **Bartlett's test**: `bartlett.test()`
+   - If not hold, use **Welch's *F*-test**: `oneway.test(..., var.equal = FALSE)`
 
 ### 事後檢定 (post-hoc test)
 
@@ -297,12 +310,49 @@ $$
 
 ```{r}
 hb_aov <- aov(hb ~ group, data = hb)
+```
+
+- Test for normality
+  
+  $$
+  \begin{cases}
+  H_0: \text{data come from a normal distribution} \\
+  H_1: \text{data do not come from a normal distribution}
+  \end{cases}
+  $$
+  
+```{r indent = "  "}
+shapiro.test(hb_aov$residuals)
+```
+
+- Test for equality of variances
+  
+  $$
+  \begin{cases}
+  H_0: \sigma^2_{sb} = \sigma^2_{sc} = \sigma^2_{ss} \\
+  H_1: \text{at least one } \sigma^2_i \ne \sigma^2_j ~~~\text{for}~~~
+  i,j = \{sb, sc, ss\}
+  \end{cases}
+  $$
+  
+```{r indent = "  "}
+bartlett.test(hb ~ group, data = hb)
+```
+
+- ANOVA
+  
+```{r indent = "  "}
 summary(hb_aov)
+
+# How to get p-value?
+1 - pf(50, df1 = 2, df2 = 38)
 ```
 
 **結論**: *p*-value = $2.28 \times 10^{-11}$，
 在顯著水準 0.05 下可以拒絕 $H_0$。
 三種類型的鐮刀型紅血球疾病患者的血紅素平均濃度並非完全相同。
+
+---
 
 為了找出哪種類型的鐮刀型紅血球疾病的血紅素平均濃度與其他類型有差異，
 需進行進行事後檢定。
