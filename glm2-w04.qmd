@@ -260,11 +260,11 @@ t.test(birthweight ~ smoking, data = smk_wt, var.equal = TRUE)
 
 - Independence of observations
 - Normality
-   - Check with **Shapiro-Wilk test**: `shapiro.test()`
-   - If not hold, use non-parametric **Kruskal-Wallis test**: `kruskal.test()`
+   - Check using **Shapiro-Wilk test**: `shapiro.test()`
+   - If not met, use non-parametric **Kruskal-Wallis test**: `kruskal.test()`
 - Equality of variances
-   - Check with **Bartlett's test**: `bartlett.test()`
-   - If not hold, use **Welch's *F*-test**: `oneway.test(..., var.equal = FALSE)`
+   - Check using **Bartlett's test** or **Levene's test**: `bartlett.test()` or `car::leveneTest()`
+   - If not met, use **Welch's *F*-test**: `oneway.test(..., var.equal = FALSE)`
 
 ### 事後檢定 (post-hoc test)
 
@@ -357,8 +357,10 @@ summary(hb_aov)
 
 ---
 
+#### Bonferroni correction {.unnumbered}
+
 為了找出哪種類型的鐮刀型紅血球疾病的血紅素平均濃度與其他類型有差異，
-需進行進行事後檢定。
+需進行事後檢定。
 
 ```{r}
 pairwise.t.test(hb$hb, hb$group, p.adjust.method = "bonf")
@@ -371,7 +373,13 @@ pairwise.t.test(hb$hb, hb$group, p.adjust.method = "bonf")
 
 ::: {.callout-note}
 
-Bonferroni correction 偏保守，較不容易看出成對比較的差別。可改用其他校正方法：
+Bonferroni correction 偏保守 (高估 *p*-value)，較不容易看出成對比較的差別。可改用其他校正方法:
+
+```{r}
+#| eval: false
+
+p.adjust.method = "..."
+```
 
 - `"holm"`: Holm (1979)
 - `"hochberg"`: Hochberg (1988)
@@ -380,3 +388,11 @@ Bonferroni correction 偏保守，較不容易看出成對比較的差別。可�
 - `"BY"`: Benjamini & Yekutieli (2001)
 
 :::
+
+#### Tukey's HSD (honestly significant difference) test {.unnumbered}
+
+```{r}
+TukeyHSD(hb_aov)
+par(mai = c(1, 2, 1, 0.5))
+plot(TukeyHSD(hb_aov), las = 1)
+```
