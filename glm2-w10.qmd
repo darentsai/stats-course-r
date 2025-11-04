@@ -1,0 +1,479 @@
+---
+title: "廣義線性模型 (HDAS7009-02)"
+subtitle: Logistic Regression (1)
+author: "Tsai, Dai-Rong"
+number-sections: true
+toc: true
+shift-heading-level-by: -1
+toc-expand: 3
+toc-depth: 3
+format:
+  html:
+    embed-resources: true
+    code-link: true
+    grid:
+      margin-width: 350px
+  pdf:
+    CJKmainfont: "Kaiti TC"
+    CJKoptions:
+      - BoldFont=Kaiti TC Bold
+    geometry:
+      - right=30mm
+knitr: 
+  opts_chunk: 
+    R.options: 
+      knitr.table.html.attr: "quarto-disable-processing=true"
+---
+
+## Pneumoconiosis dataset
+
+Pneumoconiosis(塵肺病) is an occupational lung disease and a restrictive lung disease
+caused by the inhalation of dust, often in mines and from agriculture.
+
+- `year`: Number of years of exposure
+- `n`: Total Number of miners
+- `case`: Number of severe cases
+- `noncase`: Number of non-severe cases
+
+```{r}
+pneu <- read.csv("data/pneumoconiosis.csv")
+pneu <- transform(pneu,
+                  noncase = n - case,
+                  yeargrp = ifelse(year < 30, "＜30", "＞30"))
+pneu
+```
+
+## Contingency table analysis
+
+```{r}
+pneu_tab <- xtabs(cbind(noncase, case) ~ yeargrp, data = pneu)
+pneu_tab
+class(pneu_tab)
+dim(pneu_tab)
+```
+
+### Hypothesis testing
+
+- **Statement 1**
+  - $H_0$ : 礦工暴露年數與得到塵肺病與否無關
+  - $H_1$ : 礦工暴露年數與得到塵肺病與否有關
+
+- **Statement 2**: 令 $p_1$ 與 $p_2$ 分別代表暴露年數<30年與>30年的礦工得到塵肺病的機率
+  - $H_0$ : $p_1 = p_2$
+  - $H_1$ : $p_1 \ne p_2$
+
+- **Statement 3**: 令 $\theta$ 為暴露年數>30年的礦工相較於暴露<30年的礦工，得到塵肺病的勝算比(odds ratio)
+  - $H_0$ : $\theta = 1$
+  - $H_1$ : $\theta \ne 1$
+
+### Pearson's chi-squared test
+
+當自由度為 1 (即 $2 \times 2$ 列聯表)，
+並以 Pearson 近似卡方值進行適合度(goodness-of-fit)
+或獨立性(independence)檢定時，由於列聯表的資料是離散型資料，
+而卡方分布是一個連續機率密度函數，
+故需要利用葉茲連續校正 (Yate's continuity correction)，
+減少卡方分布和實際資料分布之間的差異。
+
+```{r}
+chisq.test(pneu_tab) # default: correct = TRUE
+chisq.test(pneu_tab, correct = FALSE)
+```
+
+::: {.callout-note}
+
+當所有細格內的期望次數 $\ge 10$ 時，連續校正對檢定結果的影響很小。
+
+```{r}
+chisq.test(pneu_tab)$expected
+```
+
+:::
+
+### Fisher's exact test
+
+- 當有「80%以上細格的期望次數>5」時，卡方檢定統計量才會較好地近似卡方分布。
+對於 $2 \times 2$ 列聯表，即所有細格的期望次數都要>5。
+若此原則不成立，卡方分布和實際資料分布之間的差異較大，建議改用 Fisher’s exact test。
+
+- Fisher’s exact test 利用超幾何分布
+(hypergeometric distribution) 計算列聯表中觀測資料的機率。
+超幾何分布是一個離散機率分布，適合用於描述小樣本的次數資料。
+
+::: {.callout-tip}
+
+### Arguments of `fisher.test()`
+
+- `alternative`: alternative hypothesis
+  - `"two.sided"` $(H_0: OR = 1;~~~ H_1: OR \ne 1)$
+  - `"greater"` $~~~(H_0: OR \le 1;~~~ H_1: OR > 1)$
+  - `"less"` $~~~~~~~~(H_0: OR \ge 1;~~~ H_1: OR < 1)$
+- `or = 1`: the hypothesized odds ratio
+- `conf.int = TRUE`: whether a confidence interval for the odds ratio
+should be computed and returned
+- `conf.level = 0.95`: confidence level
+
+See `?fisher.test` for more details.
+
+:::
+
+::: {.panel-tabset}
+
+#### Two-sided test {.unnumbered .unlisted}
+
+```{r}
+fisher.test(pneu_tab)
+```
+
+#### Right-tailed test {.unnumbered .unlisted}
+
+```{r}
+fisher.test(pneu_tab, alternative = "greater")
+```
+
+#### Left-tailed test {.unnumbered .unlisted}
+
+```{r}
+fisher.test(pneu_tab, alternative = "less")
+```
+
+:::
+
+Fisher’s exact test 假設在列總和 (row margin) 與行總和 (column margin) 固定的情況下，
+$2 \times 2$ 列聯表的任一細格發生數服從超幾何分布，其他細格的次數由邊際總和自動決定。
+
+```{r eval=FALSE}
+addmargins(pneu_tab)
+```
+
+```{r}
+#| echo: false
+
+library(kableExtra)
+
+pneu_tab_2 <- pneu_tab %>%
+  addmargins() %>%
+  as.data.frame.matrix() %>%
+  tibble::rownames_to_column(var = "year")
+
+pneu_tab_2 %>%
+  transform(case = cell_spec(case, color = c("black", "red", "black"),
+                             bold = c(0, 1, 0))) %>% 
+  kbl(escape = FALSE) %>% 
+  column_spec(4, background = "gray90") %>% 
+  row_spec(3, background = "gray90") %>% 
+  kable_classic(full_width = FALSE)
+```
+
+在列總和 (243, 128) 與行總和 (327, 44) 固定，且虛無假設 ($H_0:OR=1$) 成立的情況下，
+假設暴露大於 30 年的 case 人數 $X$ (觀測人數 32) 服從超幾何分布，
+則其機率質量函數為:
+
+$$
+f(X = x) = \frac{\binom{44}{x}\binom{327}{128-x}}{\binom{371}{128}},
+~~~ x = 0, 1, ..., 44
+$$
+
+> 其直觀的解釋為：若母體中包含 44 位 case 和 327 位 noncase，
+> 從中以「取後不放回」的方式隨機抽出 128 位樣本，則裡面有 $x$ 位 case 的機率。
+
+#### Exact *p*-value
+
+- Exact *p*-value for two-sided test ($H_1: OR \ne 1$)
+
+  > Two-sided tests are based on the probabilities of the tables, and
+  > take as "more extreme" all tables with probabilities less than or equal to
+  > that of the observed table, the p-value being the sum of such probabilities.
+  >
+  > From `?fisher.test`
+  
+  虛無假設 ($H_0:OR=1$) 成立下，得到「與目前的觀測值($X=32$)一樣」
+  或「更極端」的觀測值的機率。
+
+  $$
+  p\text{-}value = \sum_{x:f(x) \le f(32)} f(X=x)
+  $$
+
+```{r indent = "  "}
+p_all <- dhyper(0:44, 44, 327, 128)
+p_obs <- dhyper(32, 44, 327, 128)
+sum(p_all[p_all <= p_obs])
+```
+
+- Exact *p*-value for right-tailed test ($H_1: OR > 1$)
+
+  $$
+  p_{\text{upper}} = \sum_{x=32}^{44} f(X=x)
+  $$
+
+```{r indent = "  "}
+(pU <- sum(dhyper(32:44, 44, 327, 128)))
+```
+
+- Exact *p*-value for left-tailed test ($H_1: OR < 1$)
+
+  $$
+  p_{\text{lower}} = \sum_{x=0}^{32} f(X=x)
+  $$
+
+```{r indent = "  "}
+(pL <- sum(dhyper(0:32, 44, 327, 128)))
+```
+
+::: {.callout-note}
+
+雙尾 *p*-value 除了 R 函數 `fisher.test()` 使用的定義之外，其另一個定義是:
+
+$$
+p\text{-}value = 2 \times Min\{ p_{\text{lower}},~ p_{\text{upper}}\}
+$$
+
+```{r}
+2 * min(pL, pU)
+```
+
+:::
+
+#### Conditional maximum likelihood estimation (CMLE)
+
+- Noncentral hypergeometric distribution
+
+$$
+f(X = x) = \frac{\binom{44}{x}\binom{327}{128-x}OR^x}
+                {\sum_{y=0}^{44} \binom{44}{y}\binom{327}{128-y}OR^y},
+~~~ x = 0, 1, ..., 44
+$$
+
+```{r}
+pneu_pmf <- function(x, or) {
+  x_all <- 0:44
+  denom <- sum(choose(44, x_all) * choose(327, 128 - x_all) * or^x_all)
+  L <- (choose(44, x) * choose(327, 128 - x) * or^x) / denom
+  return(L)
+}
+
+or_cmle <- optimize(\(or) pneu_pmf(x = 32, or = or),
+                    interval = c(1e-5, 1e2), maximum = TRUE)$maximum
+or_cmle
+
+plot(Vectorize(\(or) pneu_pmf(x = 32, or = or)), from = 1, to = 10,
+     xlab = "Odds Ratio", ylab = "Likelihood")
+abline(v = or_cmle, col = 2, lwd = 2)
+mtext(round(or_cmle, 2), side = 1, at = or_cmle, col = 2)
+```
+
+#### Exact confidence interval
+
+- Lower bound
+
+```{r indent = "  "}
+uniroot(\(or) sum(pneu_pmf(x = 32:44, or = or)) - 0.025, interval = c(1e-5, 1e2))$root
+```
+
+- Upper bound
+
+```{r indent = "  "}
+uniroot(\(or) sum(pneu_pmf(x = 0:32, or = or)) - 0.025, interval = c(1e-5, 1e2))$root
+```
+
+## Logistic regression
+
+### Binary covariate
+
+`pneu` 根據解釋變數的不同數值分別計算事件發生數，這種資料型態稱為 grouped data。
+對 grouped data 配適 logistic regression 有兩種語法：
+
+1. 將模型的 response 設為一個 2-column matrix，分別代表 case 與 non-case 的人數
+
+```{r indent = "   "}
+m1 <- glm(cbind(case, noncase) ~ yeargrp, family = binomial, data = pneu)
+```
+
+2. 將模型的 response 設為 case 的比例，但注意要用總人數加權
+
+```{r indent = "   "}
+m1 <- glm(case/n ~ yeargrp, family = binomial, data = pneu, weights = n)
+```
+
+兩種語法完全等價。之後可用 `summary()` 檢視結果：
+
+```{r}
+summary(m1)
+```
+
+- Intercept
+
+  > **解釋**: 暴露年數<30年的礦工得到塵肺病的「勝算」(odds)
+  > 為 $e^{-2.9575}=0.052$，且達統計顯著 (與 $odds=1$ 有顯著差異):
+  > 
+  > - *p*-value < $2 \times 10^{-16} < 0.05$
+  > - 95% 信賴區間未包含 1
+  >
+  > $$
+  > (e^{-2.9575 - 1.96 \times 0.2961}, e^{-2.9575 + 1.96 \times 0.2961})
+  >   = (0.029, 0.093)
+  > $$
+
+- Slope
+
+  > **解釋**: 暴露年數>30年的礦工得到塵肺病的「勝算」(odds)
+  > 是暴露年數<30年的礦工的 $e^{1.8589}=6.417$ 倍，
+  > 即暴露年數>30年的礦工相較於暴露<30年的礦工，
+  > 得到塵肺病的「勝算比」(odds ratio) 為 6.417，
+  > 且達統計顯著 (與 $OR=1$ 有顯著差異):
+  > 
+  > - *p*-value = $2.35 \times 10^{-7} < 0.05$
+  > - 95% 信賴區間未包含 1
+  >
+  > $$
+  > (e^{1.8589 - 1.96 \times 0.3596}, e^{1.8589 + 1.96 \times 0.3596})
+  >   = (3.171, 12.984)
+  > $$
+
+```{r}
+exp(coef(m1))
+exp(confint.default(m1))
+```
+
+### Continuous covariate
+
+```{r}
+m2 <- glm(case/n ~ year, family = binomial, data = pneu, weights = n)
+summary(m2)
+```
+
+> **解釋**: 暴露年數每增加一年，得到塵肺病的「勝算」(odds)
+> 是增加前的 $e^{0.093}=1.098$ 倍，且達統計顯著:
+> 
+> - *p*-value = $1.37 \times 10^{-9} < 0.05$
+> - 95% 信賴區間未包含 1
+>
+> $$
+> (e^{0.0935 - 1.96 \times 0.0154}, e^{0.0935 + 1.96 \times 0.0154})
+>   = (1.065, 1.132)
+> $$
+
+```{r}
+exp(coef(m2))[-1]
+exp(confint.default(m2))[-1, ]
+```
+
+::: {.callout-note}
+
+### Question
+
+一位暴露年數為20年的礦工相較於暴露5年的礦工，得到塵肺病的勝算比是多少?
+
+$$
+\begin{aligned}
+OR &= \frac{odds|_{\text{year}=20}}{odds|_{\text{year}=5}} \\
+log(odds|_{\text{year}=20}) &= -4.796 + 0.093 \times 20 ~~~...(1) \\
+log(odds|_{\text{year}=5}) &= -4.796 + 0.093 \times 5 ~~~~~...(2) \\
+(1)-(2): log(\frac{odds|_{\text{year}=20}}{odds|_{\text{year}=5}})
+  &= 0.093 \times (20-5) = 1.395 = log(OR) \\
+OR &= e^{1.395} = 4.035
+\end{aligned}
+$$
+
+:::
+
+### Prediction
+
+::: {.callout-tip}
+
+### Arguments of `predict()`
+
+- `newdata`: a `data.frame` in which to look for variables with which to predict
+- `type`:
+  - `"link"` log-odds (probabilities on logit scale)
+  - `"response"` probabilities
+- `se.fit`: whether standard errors are returned
+  - If `FALSE`, return a vector or matrix of predictions.
+  - If `TRUE`, return a `list` with components
+    - `$fit`: predictions
+    - `$se.fit`: estimated standard errors
+
+See `?predict.glm` for more details.
+
+:::
+
+- Create a new dataset for predictions
+
+```{r indent = "  "}
+pneu_new <- data.frame(year = seq(0, 100, by = 1))
+```
+
+- Predict probabilities at different levels of `year` with confidence intervals
+
+::: {.panel-tabset}
+
+#### Wrong 95% CI {.unnumbered .unlisted}
+
+```{r}
+#| fig-width: 6
+
+pred <- predict(m2, newdata = pneu_new,
+                type = "response", se.fit = TRUE)
+
+pneu_ci <- cbind(fit = pred$fit,
+                 lower = pred$fit - 1.96 * pred$se.fit,
+                 upper = pred$fit + 1.96 * pred$se.fit)
+
+matplot(pneu_new$year, pneu_ci, type = 'l', lty = c(1, 2, 2), ylim = c(0, 1),
+        xlab = "Years of Exposure", ylab = "Proportion of Severe Cases",
+        main = "Wrong 95% CI")
+abline(h = 0:1, lty = 2, col = "gray")
+points(case/n ~ year, pneu, cex = sqrt(n)/3)
+```
+
+#### Correct 95% CI {.unnumbered .unlisted}
+
+```{r}
+#| fig-width: 6
+
+pred <- predict(m2, newdata = pneu_new,
+                type = "link", se.fit = TRUE)
+
+pneu_ci <- cbind(fit = pred$fit,
+                 lower = pred$fit - 1.96 * pred$se.fit,
+                 upper = pred$fit + 1.96 * pred$se.fit) |> m2$family$linkinv()
+
+matplot(pneu_new$year, pneu_ci, type = 'l', lty = c(1, 2, 2), ylim = c(0, 1),
+        xlab = "Years of Exposure", ylab = "Proportion of Severe Cases",
+        main = "Correct 95% CI")
+abline(h = 0:1, lty = 2, col = "gray")
+points(case/n ~ year, pneu, cex = sqrt(n)/3)
+```
+
+:::
+
+::: {.callout-note}
+
+GLM 的預測值在 linear predictor 的尺度下會更接近常態分布，
+因此 logistic regression 應該在 log odds 的尺度下計算信賴區間，
+之後再利用 link function 的反函數將 log odds 的信賴區間轉換為機率的信賴區間。
+
+:::
+
+### Comparison with linear model
+
+```{r}
+#| message: false
+
+library(ggplot2)
+
+ggplot(pneu, aes(x = year, y = case/n, weight = n)) +
+  geom_hline(yintercept = 0:1, alpha = 0.6, linetype = 2) +
+  geom_smooth(aes(colour = "GLM", fill = "GLM"),
+              method = "glm", fullrange = TRUE,
+              method.args = list(family = "binomial")) +
+  geom_smooth(aes(colour = "Linear", fill = "Linear"),
+              method = "lm", fullrange = TRUE) +
+  geom_point(aes(size = n), alpha = 0.6) +
+  expand_limits(x = c(0, 100)) +
+  scale_colour_discrete(name = "Method") +
+  scale_fill_discrete(name = "Method") +
+  scale_size_binned() +
+  labs(x = "Years of Exposure", y = "Proportion of Severe Cases") +
+  theme_bw()
+```
