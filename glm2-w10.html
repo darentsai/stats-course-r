@@ -2707,7 +2707,7 @@ yeargrp  noncase     case
 </section><section id="fishers-exact-test" class="level2" data-number="2.3"><h2 data-number="2.3" class="anchored" data-anchor-id="fishers-exact-test">
 <span class="header-section-number">2.3</span> Fisher’s exact test</h2>
 <ul>
-<li><p>當有「80%以上細格的期望次數&gt;5」時，卡方檢定統計量才會較好地近似卡方分布。 對於 <span class="math inline">\(2 \times 2\)</span> 列聯表，即所有細格的期望次數都要&gt;5。 若此原則不成立，卡方分布和實際資料分布之間的差異較大，建議改用 Fisher’s exact test。</p></li>
+<li><p>對於任意維度的列聯表，當有「80%以上細格的期望次數&gt;5」時， 卡方檢定統計量才會較好地近似卡方分布。 若是 <span class="math inline">\(2 \times 2\)</span> 列聯表，即 <span class="math inline">\(4 \times 0.8 = 3.2\)</span> 個以上的細格 (也就是所有細格) 的期望次數都要&gt;5。 若此原則不成立，卡方分布和實際資料分布之間的差異較大，建議改用 Fisher’s exact test。</p></li>
 <li><p>Fisher’s exact test 利用超幾何分布 (hypergeometric distribution) 計算列聯表中觀測資料的機率。 超幾何分布是一個離散機率分布，適合用於描述小樣本的次數資料。</p></li>
 </ul>
 <div class="callout callout-style-default callout-tip callout-titled">
@@ -3068,6 +3068,20 @@ Number of Fisher Scoring iterations: 5</code></pre>
 yeargrp＞30 3.17103066 12.98429926</code></pre>
 </div>
 </div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>單變數 logistic regression 且解釋變數是類別變數時，迴歸係數即代表 <span class="math inline">\(log(OR)\)</span>， 其估計值與標準誤會與直接從列聯表計算的結果完全一致:</p>
+<p><span class="math display">\[ OR = \frac{231 \times 32}{12 \times 96} = 6.417 \]</span> <span class="math display">\[ log(OR) = log(6.417) = 1.8589 \]</span> <span class="math display">\[ SE(log(OR)) = \sqrt{\frac{1}{231} + \frac{1}{12} + \frac{1}{96} + \frac{1}{32}} = 0.3596 \]</span></p>
+</div>
+</div>
 </section><section id="continuous-covariate" class="level2" data-number="3.2"><h2 data-number="3.2" class="anchored" data-anchor-id="continuous-covariate">
 <span class="header-section-number">3.2</span> Continuous covariate</h2>
 <div class="cell">
@@ -3095,6 +3109,9 @@ AIC: 32.877
 Number of Fisher Scoring iterations: 4</code></pre>
 </div>
 </div>
+<ul>
+<li>
+<p>Slope</p>
 <blockquote class="blockquote">
 <p><strong>解釋</strong>: 暴露年數每增加一年，得到塵肺病的「勝算」(odds) 是增加前的 <span class="math inline">\(e^{0.093}=1.098\)</span> 倍，且達統計顯著:</p>
 <ul>
@@ -3108,6 +3125,8 @@ Number of Fisher Scoring iterations: 4</code></pre>
   = (1.065, 1.132)
 \]</span></p>
 </blockquote>
+</li>
+</ul>
 <div class="cell">
 <div class="sourceCode" id="cb47"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Log.html">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html">coef</a></span><span class="op">(</span><span class="va">m2</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="op">-</span><span class="fl">1</span><span class="op">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
